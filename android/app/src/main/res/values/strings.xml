@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">VITAL AGE</string>
+    <string name="title_activity_main">VITAL AGE</string>
+    <string name="package_name">de.vitalage.app</string>
+    <string name="custom_url_scheme">de.vitalage.app</string>
+</resources>
