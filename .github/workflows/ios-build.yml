@@ -1,0 +1,74 @@
+name: iOS Build (unsigned IPA)
+
+# Baut eine UNSIGNED IPA auf einem GitHub-Mac-Runner.
+# Unsigned = nicht direkt installierbar, aber mit AltStore/Sideloadly
+# signierbar (eigene Apple-ID, kostenlos) -> Installation auf dem
+# eigenen iPhone (7 Tage, verlängerbar).
+#
+# Manuell starten: GitHub Repo -> Actions -> "iOS Build (unsigned IPA)" -> Run workflow
+# Oder: gh workflow run ios-build.yml
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web app (PWA)
+        run: npm run build
+
+      - name: Capacitor sync (web assets -> iOS)
+        run: npx cap sync ios
+
+      - name: Xcode build (unsigned)
+        working-directory: ios/App
+        run: |
+          xcodebuild \
+            -project App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$PWD/build" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+
+      - name: Package unsigned IPA
+        run: |
+          APP_DIR="ios/App/build/Build/Products/Release-iphoneos/App.app"
+          if [ ! -d "$APP_DIR" ]; then
+            echo "Fehler: App.app nicht gefunden"
+            ls -la ios/App/build/Build/Products/ 2>&1 || true
+            exit 1
+          fi
+          mkdir -p ipa
+          (cd "$APP_DIR/.." && zip -qry "$GITHUB_WORKSPACE/ipa/vital-age-ios-unsigned.ipa" App.app)
+          ls -la ipa/
+
+      - name: Upload IPA (Artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: vital-age-ios-unsigned
+          path: ipa/vital-age-ios-unsigned.ipa
+          retention-days: 30
+
+      - name: Upload IPA to Release (nur bei Tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ipa/vital-age-ios-unsigned.ipa

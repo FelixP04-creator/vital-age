@@ -55,16 +55,31 @@ cd android
 
 ## iOS
 
+**Empfohlen: GitHub-Actions-Workflow** (kein eigener Mac nötig):
+
+1. Repo → **Actions** → *„iOS Build (unsigned IPA)"* → **Run workflow**
+   (oder CLI: `gh workflow run ios-build.yml`)
+2. ~5–10 Min später: Workflow-Lauf → **Artifacts** →
+   `vital-age-ios-unsigned.ipa` herunterladen
+3. IPA auf das iPhone bringen (AirDrop/Files/Drive) und mit
+   **Sideloadly** (Windows, kostenlos) oder **AltStore** sideloaden —
+   reicht die eigene (kostenlose) Apple-ID, keine bezahlte
+   Developer-Lizenz.
+4. Auf dem iPhone: Einstellungen → Allgemein → VPN & Geräteverwaltung →
+   eigene Apple-ID vertrauen.
+
+> **Wirkungsdauer:** Sideload mit kostenloser Apple-ID hält **7 Tage**
+> (App-Icon neu öffnen verlängert auf 7 Tage). Für permanentes Testing
+> braucht es einen Apple-Developer-Account (12 € M / 99 $ J).
+
+**Alternativ mit eigenem Mac:**
+
 ```bash
-cd ios
-open VitalAge.xcworkspace   # Mac + Xcode
-# Xcode: Team wählen (gratis-Developer-Account reicht für Gerät-Test)
+cd ios/App
+open App.xcodeproj
+# Xcode: Signing & Capabilities -> Team = eigene Apple-ID (gratis)
 # Run (▶) aufs verbundene iPhone
 ```
-
-**CI-Option (ohne eigenen Mac):** GitHub Actions mit `macos-latest`-Runner:
-`xcodebuild -workspace ios/VitalAge.xcworkspace -scheme VitalAge
- -configuration Debug -destination 'generic/platform=iOS' build`
 
 **PWA-Alternative:** iOS 16.4+ unterstützt installierbare PWAs (Safari →
 Share → „Zur Startansicht“) — für den schnellen Funktionstest ohne Xcode.
